@@ -10,5 +10,11 @@ USER root
 # Switch back to the n8n user
 USER node
 
-# Example: Install custom n8n nodes or npm packages
-# RUN npm install n8n-nodes-text-manipulation
+RUN npm init --yes
+
+RUN cat package.json | jq '.type = "module"' > package.json
+
+# Install npm packages
+RUN npm i \
+    matrix-js-sdk \
+    commander
