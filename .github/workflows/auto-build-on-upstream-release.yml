@@ -14,7 +14,7 @@ env:
   UPSTREAM_OWNER: n8n-io
   UPSTREAM_REPO: n8n
   TAG_FILE: UPSTREAM_TAG.txt
-  IMAGE_NAME_GHCR: ghcr.io/rikonor/n8n-custom
+  IMAGE_NAME_GHCR: ghcr.io/rikonor/n8n
 
 jobs:
   check-and-build:
