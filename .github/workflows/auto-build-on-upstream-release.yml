@@ -23,24 +23,29 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Get latest upstream release tag
+      # - name: Get latest upstream release tag
+      #   id: get_release
+      #   run: |
+      #     # Query GitHub API for latest release tag, remove leading "n8n@" if present,
+      #     # and expose as step output `tag`
+      #     response=$(curl -s -H "Accept: application/vnd.github+json" \
+      #       -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #       "https://api.github.com/repos/${{ env.UPSTREAM_OWNER }}/${{ env.UPSTREAM_REPO }}/releases/latest")
+      #     tag=$(echo "$response" | jq -r '.tag_name')
+      #     # If tag is null or empty, fail early
+      #     if [ -z "$tag" ] || [ "$tag" = "null" ]; then
+      #       echo "Failed to fetch latest release tag" >&2
+      #       echo "response: $response" >&2
+      #       exit 1
+      #     fi
+      #     # Remove leading "n8n@" prefix if present
+      #     tag=$(echo "$tag" | sed 's/^n8n@//')
+      #     echo "tag=$tag" >> $GITHUB_OUTPUT
+
+      - name: Use hardcoded tag
         id: get_release
         run: |
-          # Query GitHub API for latest release tag, remove leading "n8n@" if present,
-          # and expose as step output `tag`
-          response=$(curl -s -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ env.UPSTREAM_OWNER }}/${{ env.UPSTREAM_REPO }}/releases/latest")
-          tag=$(echo "$response" | jq -r '.tag_name')
-          # If tag is null or empty, fail early
-          if [ -z "$tag" ] || [ "$tag" = "null" ]; then
-            echo "Failed to fetch latest release tag" >&2
-            echo "response: $response" >&2
-            exit 1
-          fi
-          # Remove leading "n8n@" prefix if present
-          tag=$(echo "$tag" | sed 's/^n8n@//')
-          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "tag=1.122.2" >> $GITHUB_OUTPUT
 
       - name: Read stored tag (if file exists)
         id: read_tag
