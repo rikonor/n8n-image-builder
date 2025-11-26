@@ -90,7 +90,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.IMAGE_NAME_GHCR }}:${{ env.IMAGE_TAG }}
+          tags: ${{ env.IMAGE_NAME_GHCR }}:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME_GHCR }}:latest
           build-args: |
             BASE_IMAGE=ghcr.io/${{ env.UPSTREAM_OWNER }}/${{ env.UPSTREAM_REPO }}:${{ steps.get_release.outputs.tag }}
 
