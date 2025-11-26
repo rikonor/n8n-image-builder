@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -eu
 
 # Default to latest if not provided
 UPSTREAM_TAG=${1:-}
