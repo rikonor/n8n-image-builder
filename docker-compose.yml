@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8n-custom:latest
+    build:
+      context: .
+      args:
+        # This default arg is just a placeholder. 
+        # For proper building, use ./local-build.sh or specify the arg explicitly.
+        # However, if you just want to 'up' an already built image, this is fine.
+        BASE_IMAGE: ghcr.io/n8n-io/n8n:latest
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:

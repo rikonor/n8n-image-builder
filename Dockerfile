@@ -1,5 +1,5 @@
 ARG BASE_IMAGE
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE:-latest}
 
 # Switch to root if you need to install system dependencies
 USER root

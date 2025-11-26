@@ -32,3 +32,31 @@ USER node
 
 1. Ensure GitHub Actions are enabled for this repository.
 2. The workflow will automatically create the `UPSTREAM_TAG.txt` file on its first successful run if it doesn't exist.
+
+## Local Development
+
+You can build and run the custom image locally using the provided scripts.
+
+### Build Locally
+
+Use the `local-build.sh` script to fetch the latest upstream tag and build the image:
+
+```bash
+./local-build.sh
+```
+
+Or specify a specific upstream tag:
+
+```bash
+./local-build.sh 1.70.0
+```
+
+### Run Locally
+
+Once built, you can run the image using Docker Compose:
+
+```bash
+docker-compose up
+```
+
+The n8n instance will be available at `http://localhost:5678`.
