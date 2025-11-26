@@ -1,0 +1,104 @@
+name: Check upstream & build custom n8n image
+
+on:
+  schedule:
+    - cron: "0 * * * *" # every hour
+  workflow_dispatch: {} # allow manual trigger
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  UPSTREAM_OWNER: n8n-io
+  UPSTREAM_REPO: n8n
+  TAG_FILE: UPSTREAM_TAG.txt
+  IMAGE_NAME_GHCR: ghcr.io/rikonor/n8n-custom
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get latest upstream release tag
+        id: get_release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = process.env.UPSTREAM_OWNER;
+            const repo = process.env.UPSTREAM_REPO;
+            const release = await github.rest.repos.getLatestRelease({
+              owner, repo
+            });
+            core.setOutput("tag", release.data.tag_name);
+
+      - name: Read stored tag (if file exists)
+        id: read_tag
+        run: |
+          if [ -f "${{ env.TAG_FILE }}" ]; then
+            echo "stored=$(cat ${{ env.TAG_FILE }})" >> $GITHUB_OUTPUT
+          else
+            echo "stored=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Decide if build is needed
+        id: decide
+        run: |
+          echo "upstream=${{ steps.get_release.outputs.tag }}" >> $GITHUB_OUTPUT
+          echo "stored=${{ steps.read_tag.outputs.stored }}" >> $GITHUB_OUTPUT
+          if [ "${{ steps.get_release.outputs.tag }}" = "${{ steps.read_tag.outputs.stored }}" ]; then
+            echo "need_build=false" >> $GITHUB_OUTPUT
+          else
+            echo "need_build=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Exit early if no new release
+        if: ${{ steps.decide.outputs.need_build == 'false' }}
+        run: |
+          echo "No new upstream release (tag unchanged). Exiting."
+
+      - name: Prepare tag & set image tag
+        if: ${{ steps.decide.outputs.need_build == 'true' }}
+        run: |
+          UPSTREAM_TAG="${{ steps.get_release.outputs.tag }}"
+          echo "UPSTREAM_TAG=${UPSTREAM_TAG}" >> $GITHUB_ENV
+          # image tag scheme: <upstream-tag>-custom
+          IMAGE_TAG="${UPSTREAM_TAG}-custom"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+      - name: Login to GitHub Container Registry
+        if: ${{ steps.decide.outputs.need_build == 'true' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image to GHCR
+        if: ${{ steps.decide.outputs.need_build == 'true' }}
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_NAME_GHCR }}:${{ env.IMAGE_TAG }}
+          build-args: |
+            BASE_IMAGE=ghcr.io/${{ env.UPSTREAM_OWNER }}/${{ env.UPSTREAM_REPO }}:${{ steps.get_release.outputs.tag }}
+
+      - name: Update stored tag file and commit
+        if: ${{ steps.decide.outputs.need_build == 'true' }}
+        run: |
+          echo "${{ steps.get_release.outputs.tag }}" > ${{ env.TAG_FILE }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ${{ env.TAG_FILE }}
+          git commit -m "chore: update upstream tag to ${{ steps.get_release.outputs.tag }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print success
+        if: ${{ steps.decide.outputs.need_build == 'true' }}
+        run: echo "Built and pushed ${{ env.IMAGE_NAME_GHCR }}:${{ env.IMAGE_TAG }} for upstream ${ { steps.get_release.outputs.tag } }"
