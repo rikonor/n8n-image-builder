@@ -19,7 +19,7 @@ if [ -z "$UPSTREAM_TAG" ]; then
   echo "Latest tag detected: $UPSTREAM_TAG"
 fi
 
-IMAGE_NAME="n8n-custom"
+IMAGE_NAME="n8n"
 IMAGE_TAG="${UPSTREAM_TAG}-custom"
 
 echo "Building $IMAGE_NAME:$IMAGE_TAG based on n8n-io/n8n:$UPSTREAM_TAG..."
