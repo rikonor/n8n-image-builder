@@ -33,7 +33,12 @@ jobs:
             const release = await github.rest.repos.getLatestRelease({
               owner, repo
             });
-            core.setOutput("tag", release.data.tag_name);
+
+            let tag;
+            tag = release.data.tag_name;
+            tag = tag.replace(/^n8n@/, tag);
+
+            core.setOutput("tag", tag);
 
       - name: Read stored tag (if file exists)
         id: read_tag
